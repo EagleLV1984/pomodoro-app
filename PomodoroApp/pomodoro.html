@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="番茄钟">
+<meta name="theme-color" content="#101018">
+<link rel="manifest" href="./manifest.json">
+<title>番茄钟</title>
+<style>
+  :root {
+    --bg: #101018;
+    --surface: #1c1c28;
+    --surface2: #242430;
+    --text: #e4e4ed;
+    --text2: #8888a0;
+    --work: #ff6b6b;
+    --break: #4ade80;
+    --long: #60a5fa;
+    --accent: var(--work);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, 'Segoe UI', 'Microsoft YaHei UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    user-select: none;
+    -webkit-user-select: none;
+    overflow: hidden;
+    -webkit-app-region: no-drag;
+  }
+
+  .app {
+    width: 100%;
+    max-width: 380px;
+    padding: 0 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+
+  /* Mode tabs */
+  .modes {
+    display: flex;
+    gap: 4px;
+    background: var(--surface);
+    border-radius: 10px;
+    padding: 4px;
+    width: 100%;
+  }
+
+  .mode-btn {
+    flex: 1;
+    border: none;
+    background: transparent;
+    color: var(--text2);
+    padding: 8px 0;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.2s;
+    white-space: nowrap;
+    text-align: center;
+  }
+
+  .mode-btn.active {
+    background: var(--surface2);
+    color: var(--text);
+  }
+
+  .mode-btn:hover:not(.active) {
+    color: var(--text);
+  }
+
+  /* Timer ring */
+  .timer-wrap {
+    position: relative;
+    width: 230px;
+    height: 230px;
+  }
+
+  .timer-ring {
+    transform: rotate(-90deg);
+    width: 230px;
+    height: 230px;
+  }
+
+  .ring-bg {
+    fill: none;
+    stroke: #1e1e2e;
+    stroke-width: 7;
+  }
+
+  .ring-progress {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 7;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.35s linear, stroke 0.4s;
+  }
+
+  .timer-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+  }
+
+  .time {
+    font-size: 52px;
+    font-weight: 700;
+    letter-spacing: -1px;
+    font-variant-numeric: tabular-nums;
+    font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+    line-height: 1;
+  }
+
+  .status {
+    font-size: 11px;
+    color: var(--text2);
+    margin-top: 6px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  /* Controls */
+  .controls {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+  }
+
+  .btn {
+    border: none;
+    cursor: pointer;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    background: transparent;
+    color: var(--text2);
+  }
+
+  .btn:active { transform: scale(0.92); }
+
+  .btn-play {
+    width: 56px;
+    height: 56px;
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 4px 18px rgba(255, 107, 107, 0.3);
+  }
+  .btn-play:hover { box-shadow: 0 6px 24px rgba(255, 107, 107, 0.45); }
+
+  .btn-side {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+  }
+  .btn-side:hover { color: var(--text); background: var(--surface); }
+
+  /* Stats */
+  .stats {
+    display: flex;
+    gap: 28px;
+    color: var(--text2);
+    font-size: 11px;
+    text-align: center;
+  }
+
+  .stats span {
+    color: var(--text);
+    font-weight: 600;
+    font-size: 18px;
+    display: block;
+    line-height: 1.3;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    top: 18px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    background: var(--surface);
+    color: var(--text);
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 13px;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.5);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* Flash */
+  .flash {
+    position: fixed; inset: 0; pointer-events: none; z-index: 99;
+    transition: background 0.15s;
+  }
+  .flash.pop { background: rgba(255, 107, 107, 0.06); transition: background 0s; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="modes">
+    <button class="mode-btn active" data-mode="work">专注 25</button>
+    <button class="mode-btn" data-mode="short">休息 5</button>
+    <button class="mode-btn" data-mode="long">长休 15</button>
+  </div>
+
+  <div class="timer-wrap">
+    <svg class="timer-ring" viewBox="0 0 230 230">
+      <circle class="ring-bg" cx="115" cy="115" r="105"/>
+      <circle class="ring-progress" cx="115" cy="115" r="105"
+              stroke-dasharray="659.7" stroke-dashoffset="0"/>
+    </svg>
+    <div class="timer-center">
+      <div class="time">25:00</div>
+      <div class="status">准备开始</div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="btn btn-side" id="btnReset" title="重置">⟲</button>
+    <button class="btn btn-play" id="btnPlay" title="开始 / 暂停">
+      <svg width="22" height="22" viewBox="0 0 28 28" id="playIcon">
+        <polygon points="8,4 24,14 8,24" fill="currentColor"/>
+      </svg>
+      <svg width="22" height="22" viewBox="0 0 28 28" id="pauseIcon" style="display:none">
+        <rect x="6" y="4" width="6" height="20" rx="2" fill="currentColor"/>
+        <rect x="16" y="4" width="6" height="20" rx="2" fill="currentColor"/>
+      </svg>
+    </button>
+    <button class="btn btn-side" id="btnSkip" title="跳过">⏭</button>
+  </div>
+
+  <div class="stats">
+    <div>🍅 完成 <span id="countPomodoros">0</span></div>
+    <div>📊 今日 <span id="countToday">0</span></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="flash" id="flash"></div>
+
+<script>
+  const MODES = {
+    work:  { minutes: 25, color: '#ff6b6b', status: '专注中' },
+    short: { minutes: 5,  color: '#4ade80', status: '休息中' },
+    long:  { minutes: 15, color: '#60a5fa', status: '休息中' },
+  };
+
+  const CIRCUMFERENCE = 2 * Math.PI * 105; // ~659.7
+
+  let currentMode = 'work';
+  let totalSeconds = MODES.work.minutes * 60;
+  let remaining = totalSeconds;
+  let intervalId = null;
+  let running = false;
+  let pomodoroCount = parseInt(localStorage.getItem('pomo_count') || '0');
+  let todayCount = parseInt(localStorage.getItem('pomo_today') || '0');
+  let todayDate = localStorage.getItem('pomo_date') || '';
+
+  const $time = document.querySelector('.time');
+  const $status = document.querySelector('.status');
+  const $ring = document.querySelector('.ring-progress');
+  const $playIcon = document.getElementById('playIcon');
+  const $pauseIcon = document.getElementById('pauseIcon');
+  const $accent = document.documentElement.style;
+  const $toast = document.getElementById('toast');
+  const $flash = document.getElementById('flash');
+  const $countPomo = document.getElementById('countPomodoros');
+  const $countToday = document.getElementById('countToday');
+  const $modeBtns = document.querySelectorAll('.mode-btn');
+  const $btnPlay = document.getElementById('btnPlay');
+
+  function checkToday() {
+    const d = new Date().toDateString();
+    if (todayDate !== d) {
+      todayDate = d;
+      todayCount = 0;
+      localStorage.setItem('pomo_today', '0');
+      localStorage.setItem('pomo_date', d);
+    }
+  }
+
+  function updateDisplay() {
+    const m = Math.floor(remaining / 60);
+    const s = remaining % 60;
+    $time.textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    document.title = `${$time.textContent} - 番茄钟`;
+    $ring.style.strokeDashoffset = CIRCUMFERENCE * (1 - remaining / totalSeconds);
+  }
+
+  function updateStats() {
+    $countPomo.textContent = pomodoroCount;
+    $countToday.textContent = todayCount;
+    localStorage.setItem('pomo_count', pomodoroCount);
+    localStorage.setItem('pomo_today', todayCount);
+    localStorage.setItem('pomo_date', todayDate);
+  }
+
+  function setMode(mode) {
+    currentMode = mode;
+    const cfg = MODES[mode];
+    totalSeconds = cfg.minutes * 60;
+    remaining = totalSeconds;
+    $accent.setProperty('--accent', cfg.color);
+    $status.textContent = '准备开始';
+    $modeBtns.forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+    updateDisplay();
+    stopTimer();
+  }
+
+  function startTimer() {
+    running = true;
+    $status.textContent = MODES[currentMode].status;
+    $playIcon.style.display = 'none';
+    $pauseIcon.style.display = 'block';
+    intervalId = setInterval(() => {
+      remaining--;
+      updateDisplay();
+      if (remaining <= 0) complete();
+    }, 1000);
+  }
+
+  function pauseTimer() {
+    running = false;
+    $status.textContent = '已暂停';
+    $playIcon.style.display = 'block';
+    $pauseIcon.style.display = 'none';
+    clearInterval(intervalId);
+    intervalId = null;
+  }
+
+  function stopTimer() {
+    running = false;
+    $playIcon.style.display = 'block';
+    $pauseIcon.style.display = 'none';
+    clearInterval(intervalId);
+    intervalId = null;
+    remaining = totalSeconds;
+    updateDisplay();
+  }
+
+  function complete() {
+    stopTimer();
+
+    // Beep
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      [0, 0.12].forEach((d, i) => {
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.connect(g); g.connect(ctx.destination);
+        o.type = 'sine';
+        o.frequency.value = i === 0 ? 880 : 1100;
+        g.gain.setValueAtTime(0.25, ctx.currentTime + d);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + d + 0.25);
+        o.start(ctx.currentTime + d); o.stop(ctx.currentTime + d + 0.25);
+      });
+    } catch(e) {}
+
+    // Flash
+    $flash.classList.add('pop');
+    setTimeout(() => $flash.classList.remove('pop'), 150);
+
+    // Toast
+    showToast(currentMode === 'work' ? '完成一个番茄！' : '休息结束！');
+
+    // Notification
+    if (Notification.permission === 'granted') {
+      new Notification('番茄钟', {
+        body: currentMode === 'work' ? '一个番茄完成，休息一下吧~' : '休息结束，继续加油！',
+      });
+    }
+
+    if (currentMode === 'work') {
+      pomodoroCount++;
+      todayCount++;
+      setMode(pomodoroCount % 4 === 0 ? 'long' : 'short');
+    } else {
+      setMode('work');
+    }
+    updateStats();
+    startTimer();
+  }
+
+  function showToast(msg) {
+    $toast.textContent = msg;
+    $toast.classList.add('show');
+    clearTimeout($toast._timeout);
+    $toast._timeout = setTimeout(() => $toast.classList.remove('show'), 2000);
+  }
+
+  $btnPlay.addEventListener('click', () => running ? pauseTimer() : startTimer());
+  document.getElementById('btnReset').addEventListener('click', () => stopTimer());
+  document.getElementById('btnSkip').addEventListener('click', () => complete());
+
+  $modeBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (running) pauseTimer();
+      setMode(btn.dataset.mode);
+    });
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.target.tagName === 'INPUT') return;
+    if (e.code === 'Space') { e.preventDefault(); running ? pauseTimer() : startTimer(); }
+    if (e.code === 'KeyR') stopTimer();
+    if (e.code === 'KeyS') complete();
+    if (e.code === 'Digit1') { if (running) pauseTimer(); setMode('work'); }
+    if (e.code === 'Digit2') { if (running) pauseTimer(); setMode('short'); }
+    if (e.code === 'Digit3') { if (running) pauseTimer(); setMode('long'); }
+  });
+
+  document.addEventListener('click', () => {
+    if (Notification.permission === 'default') Notification.requestPermission();
+  }, { once: true });
+
+  checkToday();
+  updateDisplay();
+  updateStats();
+  setMode('work');
+</script>
+</body>
+</html>

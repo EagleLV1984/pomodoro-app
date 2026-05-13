@@ -1,0 +1,18 @@
+{
+  "name": "番茄钟",
+  "short_name": "番茄钟",
+  "description": "一个简洁的番茄工作法计时器",
+  "start_url": "./pomodoro.html",
+  "display": "standalone",
+  "background_color": "#0f0f14",
+  "theme_color": "#0f0f14",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='100' fill='%231a1a24'/><text x='256' y='350' text-anchor='middle' font-size='320'>🍅</text></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
