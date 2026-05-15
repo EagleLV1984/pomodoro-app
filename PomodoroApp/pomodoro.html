@@ -317,6 +317,30 @@
   body.mini .dot { width: 6px; height: 6px; }
   body.mini .dot-desc { font-size: 9px; }
   body.mini .controls { width: auto; gap: 8px; }
+
+  /* === 移动端适配（触屏设备）=== */
+  @media (pointer: coarse) {
+    .mode-btn { font-size: 16px; padding: 14px 0; }
+    .mode-btn.active { font-weight: 600; }
+    .time { font-size: clamp(32px, 28cqw, 68px); }
+    .status { font-size: clamp(11px, 6cqw, 15px); }
+    .btn-play-content { font-size: 16px; }
+    .btn-side-content { font-size: 20px; }
+    .dot-desc { font-size: 13px; }
+    .btn-settings { width: 40px; height: 40px; }
+    .btn-settings svg { width: 20px; height: 20px; }
+    .setting-group label:first-child { font-size: 15px; }
+    .setting-group input[type="number"] { font-size: 15px; width: 70px; padding: 8px 10px; }
+    .settings-header h2 { font-size: 18px; }
+    .settings-close { width: 36px; height: 36px; font-size: 16px; }
+    .btn-next { font-size: 17px; padding: 15px 0; }
+    .alarm-title { font-size: 22px; }
+    .alarm-subtitle { font-size: 15px; }
+    .btn-next-later { font-size: 14px; }
+    .btn-reset-settings { font-size: 15px; padding: 12px; }
+    .setting-hint { font-size: 12px; }
+    body.mini .mode-btn { font-size: 11px; padding: 4px 10px; }
+  }
 </style>
 </head>
 <body>
@@ -586,39 +610,45 @@ document.addEventListener('keydown',e=>{
 });
 document.addEventListener('click',()=>{if(Notification.permission==='default')Notification.requestPermission();},{once:true});
 
-// ===== 按钮内光晕追踪 =====
+// ===== 长按拖动光影（桌面+移动端统一） =====
 const glows={ skip:document.getElementById('glowSkip'), play:document.getElementById('glowPlay'), reset:document.getElementById('glowReset'), modes:document.getElementById('glowModes') };
-let gx=-500,gy=-500,cx=-500,cy=-500,activeGlow=null;
+let gx=-500,gy=-500,cx=-500,cy=-500,activeGlow=null,pressWrapper=null,pressOnModes=false;
 function findWrapper(el){ while(el){ if(el.classList&&el.classList.contains('liquid_glass-wrapper'))return el; el=el.parentElement; } return null; }
 function getGlowFor(wrapper){ if(!wrapper)return null; const id=wrapper.id; if(id==='btnSkipWrap')return glows.skip; if(id==='btnPlayWrap')return glows.play; if(id==='btnResetWrap')return glows.reset; if(id==='modesWrap')return glows.modes; return null; }
-document.addEventListener('mousemove',e=>{
+function findModeBtn(x){ const btns=document.querySelectorAll('.mode-btn'); let best=null,bestD=Infinity; btns.forEach(b=>{ const r=b.getBoundingClientRect(); const cx=r.left+r.width/2,cy=r.top+r.height/2; const d=Math.hypot(x-cx,cy); if(d<bestD){bestD=d;best=b;} }); return best; }
+function clearPress(){ if(pressWrapper){ pressWrapper.classList.remove('pressed'); pressWrapper=null; } if(activeGlow){ activeGlow.classList.remove('on'); activeGlow=null; } pressOnModes=false; }
+// 鼠标按下
+document.addEventListener('mousedown',e=>{
   const w=findWrapper(e.target);
-  if(w){ const r=w.getBoundingClientRect(); gx=e.clientX-r.left; gy=e.clientY-r.top; activeGlow=getGlowFor(w); }
-  else if(activeGlow){ activeGlow.classList.remove('on');activeGlow=null; }
+  if(w){ pressWrapper=w; w.classList.add('pressed'); const r=w.getBoundingClientRect(); gx=e.clientX-r.left; gy=e.clientY-r.top; activeGlow=getGlowFor(w); pressOnModes=w.id==='modesWrap'; }
 });
-// 触摸事件 — Android 长按放大+光影跟随手指
+// 鼠标移动（仅按住时）
+document.addEventListener('mousemove',e=>{
+  if(!pressWrapper)return;
+  const r=pressWrapper.getBoundingClientRect(); gx=e.clientX-r.left; gy=e.clientY-r.top;
+  if(pressOnModes){ const btn=findModeBtn(e.clientX); if(btn)document.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active',b===btn)); }
+});
+// 鼠标松开
+document.addEventListener('mouseup',()=>{
+  if(pressOnModes&&pressWrapper){ const active=pressWrapper.querySelector('.mode-btn.active'); if(active){ if(running)pauseTimer(); setMode(active.dataset.mode); } }
+  clearPress();
+});
+// 触摸事件
 let touchWrapper=null;
 document.addEventListener('touchstart',e=>{
   const w=findWrapper(e.target);
-  if(w){
-    touchWrapper=w; w.classList.add('pressed');
-    const t=e.touches[0]; const r=w.getBoundingClientRect();
-    gx=t.clientX-r.left; gy=t.clientY-r.top;
-    activeGlow=getGlowFor(w);
-  }
+  if(w){ touchWrapper=w; pressWrapper=w; w.classList.add('pressed'); const t=e.touches[0]; const r=w.getBoundingClientRect(); gx=t.clientX-r.left; gy=t.clientY-r.top; activeGlow=getGlowFor(w); pressOnModes=w.id==='modesWrap'; }
 },{passive:true});
 document.addEventListener('touchmove',e=>{
-  if(touchWrapper){
-    const t=e.touches[0]; const r=touchWrapper.getBoundingClientRect();
-    gx=t.clientX-r.left; gy=t.clientY-r.top;
-  }
+  if(!touchWrapper)return;
+  const t=e.touches[0]; const r=touchWrapper.getBoundingClientRect(); gx=t.clientX-r.left; gy=t.clientY-r.top;
+  if(pressOnModes){ const btn=findModeBtn(t.clientX); if(btn)document.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active',b===btn)); }
 },{passive:false});
 document.addEventListener('touchend',()=>{
-  if(touchWrapper){ touchWrapper.classList.remove('pressed'); touchWrapper=null; if(activeGlow){activeGlow.classList.remove('on');activeGlow=null;} }
+  if(pressOnModes&&touchWrapper){ const active=touchWrapper.querySelector('.mode-btn.active'); if(active){ if(running)pauseTimer(); setMode(active.dataset.mode); } }
+  if(touchWrapper){ touchWrapper.classList.remove('pressed'); touchWrapper=null; } clearPress();
 });
-document.addEventListener('touchcancel',()=>{
-  if(touchWrapper){ touchWrapper.classList.remove('pressed'); touchWrapper=null; if(activeGlow){activeGlow.classList.remove('on');activeGlow=null;} }
-});
+document.addEventListener('touchcancel',()=>{ if(touchWrapper){ touchWrapper.classList.remove('pressed'); touchWrapper=null; } clearPress(); });
 function animateGlow(){
   cx+=(gx-cx)*0.18;cy+=(gy-cy)*0.18;
   if(activeGlow){ activeGlow.classList.add('on'); activeGlow.style.left=cx+'px'; activeGlow.style.top=cy+'px'; }
