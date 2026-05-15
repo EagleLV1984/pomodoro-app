@@ -4,10 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="超坦番茄钟">
+<meta name="apple-mobile-web-app-title" content="番茄钟">
 <meta name="theme-color" content="#FDF2F2">
 <link rel="manifest" href="./manifest.json">
-<title>超坦番茄钟</title>
+<title>番茄钟</title>
 <style>
   :root {
     --accent: #C15543;
@@ -235,10 +235,10 @@
   .btn-next:not(:active) { transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1); }
 
   /* 按钮按下放大 */
-  .liquid_glass-wrapper:active, .liquid_glass-wrapper.pressed { transform: scale(1.12); transition: transform 0.15s ease-out; }
-  .liquid_glass-wrapper:not(:active):not(.pressed) { transition: transform 0.6s cubic-bezier(0.34,1.56,0.64,1); }
-  .btn-play-content:active, .btn-play-content.pressed { transform: scale(1.1); transition: transform 0.15s ease-out; }
-  .btn-play-content:not(:active):not(.pressed) { transition: transform 0.6s cubic-bezier(0.34,1.56,0.64,1); }
+  .liquid_glass-wrapper:active { transform: scale(1.12); transition: transform 0.15s ease-out; }
+  .liquid_glass-wrapper:not(:active) { transition: transform 0.6s cubic-bezier(0.34,1.56,0.64,1); }
+  .btn-play-content:active { transform: scale(1.1); transition: transform 0.15s ease-out; }
+  .btn-play-content:not(:active) { transition: transform 0.6s cubic-bezier(0.34,1.56,0.64,1); }
 
   /* 按钮内光晕（overflow:hidden 裁剪） */
   .btn-glow {
@@ -399,7 +399,7 @@
     <div class="liquid_glass-sharp"></div><div class="liquid_glass-reflect"></div>
     <div class="dots">
       <div class="dot dim" id="dot1"></div><div class="dot dim" id="dot2"></div><div class="dot dim" id="dot3"></div><div class="dot dim" id="dot4"></div>
-      <span class="dot-desc">已完成 <span id="countPomodoros">0</span> 个超坦番茄钟</span>
+      <span class="dot-desc">已完成 <span id="countPomodoros">0</span> 个番茄钟</span>
     </div>
   </div>
 </div>
@@ -509,7 +509,7 @@ let pomodoroCount=parseInt(localStorage.getItem('pomo_count')||'0'), todayCount=
 const $time=document.querySelector('.time'),$status=document.querySelector('.status'),$playIcon=document.getElementById('playIcon'),$pauseIcon=document.getElementById('pauseIcon'),$btnLabel=document.getElementById('btnLabel'),$accent=document.documentElement.style,$toast=document.getElementById('toast'),$toastLabel=document.getElementById('toastLabel'),$flash=document.getElementById('flash'),$countPomo=document.getElementById('countPomodoros'),$modeBtns=document.querySelectorAll('.mode-btn');
 const dots=[document.getElementById('dot1'),document.getElementById('dot2'),document.getElementById('dot3'),document.getElementById('dot4')];
 function checkToday(){ const d=new Date().toDateString(); if(todayDate!==d){todayDate=d;todayCount=0;localStorage.setItem('pomo_today','0');localStorage.setItem('pomo_date',d);} }
-function updateDisplay(){ const m=Math.floor(remaining/60),s=remaining%60; $time.textContent=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`; document.title=`${$time.textContent} | 超坦番茄钟`; updateRingDisplay(); }
+function updateDisplay(){ const m=Math.floor(remaining/60),s=remaining%60; $time.textContent=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`; document.title=`${$time.textContent} | 番茄钟`; updateRingDisplay(); }
 function updateStats(){ $countPomo.textContent=todayCount; localStorage.setItem('pomo_count',pomodoroCount); localStorage.setItem('pomo_today',todayCount); localStorage.setItem('pomo_date',todayDate); const c=todayCount%4; dots.forEach((d,i)=>d.classList.toggle('dim',i>=c)); }
 function setMode(mode){ currentMode=mode; totalSeconds=CONFIG[mode].minutes*60; remaining=totalSeconds; $accent.setProperty('--accent',CONFIG[mode].color); $accent.setProperty('--accent-glow',CONFIG[mode].glow); $status.textContent='准备开始'; $btnLabel.textContent='开始'; $modeBtns.forEach(b=>b.classList.toggle('active',b.dataset.mode===mode)); updateDisplay(); stopTimer(); }
 function startTimer(){ running=true; $status.textContent=CONFIG[currentMode].status; $playIcon.style.display='none'; $pauseIcon.style.display='block'; $btnLabel.textContent='暂停'; intervalId=setInterval(()=>{remaining--;updateDisplay();if(remaining<=0)complete();},1000); }
@@ -535,7 +535,7 @@ function complete(){
     showToast(currentMode==='work'?'完成一个番茄！':'休息结束！');
     setMode(pendingNextMode); updateStats(); pendingNextMode=null; if(autoStart)startTimer();
   }
-  if(Notification.permission==='granted'){new Notification('超坦番茄钟',{body:currentMode==='work'?'一个番茄完成，休息一下吧~':'休息结束，继续加油！'});}
+  if(Notification.permission==='granted'){new Notification('番茄钟',{body:currentMode==='work'?'一个番茄完成，休息一下吧~':'休息结束，继续加油！'});}
 }
 function showToast(msg){ $toastLabel.textContent=msg; $toast.classList.add('show'); clearTimeout($toast._timeout); $toast._timeout=setTimeout(()=>$toast.classList.remove('show'),2000); }
 function refreshSettingsUI(){ document.getElementById('setWorkMin').value=CONFIG.work.minutes; document.getElementById('setShortMin').value=CONFIG.short.minutes; document.getElementById('setLongMin').value=CONFIG.long.minutes; document.getElementById('setSound').checked=soundEnabled; document.getElementById('setAutoStart').checked=autoStart; document.getElementById('setConfirmMode').checked=confirmMode; document.getElementById('setTopMost').checked=alwaysOnTop; document.getElementById('setMini').checked=miniMode; document.getElementById('setDarkMode').checked=darkMode;
@@ -595,29 +595,6 @@ document.addEventListener('mousemove',e=>{
   const w=findWrapper(e.target);
   if(w){ const r=w.getBoundingClientRect(); gx=e.clientX-r.left; gy=e.clientY-r.top; activeGlow=getGlowFor(w); }
   else if(activeGlow){ activeGlow.classList.remove('on');activeGlow=null; }
-});
-// 触摸事件 — Android 长按放大+光影跟随手指
-let touchWrapper=null;
-document.addEventListener('touchstart',e=>{
-  const w=findWrapper(e.target);
-  if(w){
-    touchWrapper=w; w.classList.add('pressed');
-    const t=e.touches[0]; const r=w.getBoundingClientRect();
-    gx=t.clientX-r.left; gy=t.clientY-r.top;
-    activeGlow=getGlowFor(w);
-  }
-},{passive:true});
-document.addEventListener('touchmove',e=>{
-  if(touchWrapper){
-    const t=e.touches[0]; const r=touchWrapper.getBoundingClientRect();
-    gx=t.clientX-r.left; gy=t.clientY-r.top;
-  }
-},{passive:false});
-document.addEventListener('touchend',()=>{
-  if(touchWrapper){ touchWrapper.classList.remove('pressed'); touchWrapper=null; if(activeGlow){activeGlow.classList.remove('on');activeGlow=null;} }
-});
-document.addEventListener('touchcancel',()=>{
-  if(touchWrapper){ touchWrapper.classList.remove('pressed'); touchWrapper=null; if(activeGlow){activeGlow.classList.remove('on');activeGlow=null;} }
 });
 function animateGlow(){
   cx+=(gx-cx)*0.18;cy+=(gy-cy)*0.18;

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Pomodoro" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:windowBackground">#FDF2F2</item>
+        <item name="android:statusBarColor">#FDF2F2</item>
+        <item name="android:navigationBarColor">#FDF2F2</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+</resources>

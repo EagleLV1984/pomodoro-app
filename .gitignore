@@ -4,3 +4,9 @@ publish/
 *.exe
 **/bin/
 **/obj/
+**/.gradle/
+**/build/
+**/.idea/
+*.keystore
+release/Pomodoro.exe
+release/pomodoro.png

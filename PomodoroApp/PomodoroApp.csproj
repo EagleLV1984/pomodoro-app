@@ -8,9 +8,16 @@
     <ImplicitUsings>enable</ImplicitUsings>
 
     <AssemblyName>Pomodoro</AssemblyName>
+    <ApplicationIcon>appicon.ico</ApplicationIcon>
     <PublishSingleFile>true</PublishSingleFile>
-    <SelfContained>false</SelfContained>
+    <SelfContained>true</SelfContained>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <DebugType>none</DebugType>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <AllowedReferenceRelatedFileExtensions>none</AllowedReferenceRelatedFileExtensions>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,15 +25,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="pomodoro.html">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="manifest.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="sw.js">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    <EmbeddedResource Include="pomodoro.html" />
+    <EmbeddedResource Include="pomodoro.png" />
+    <EmbeddedResource Include="manifest.json" />
+    <EmbeddedResource Include="sw.js" />
+    <EmbeddedResource Include="appicon.ico" />
   </ItemGroup>
 
 </Project>
