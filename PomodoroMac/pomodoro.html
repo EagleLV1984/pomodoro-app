@@ -265,7 +265,7 @@
   .settings-overlay.open { opacity: 1; pointer-events: auto; }
   .settings-panel {
     position: absolute; top: 0; right: 0; width: 260px; max-width: 85vw;
-    height: 100%; overflow: hidden;
+    height: 100%;
     background: var(--settings-bg, rgba(253,242,242,0.85));
     backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
     box-shadow: -4px 0 24px rgba(93,46,46,0.1);
@@ -449,16 +449,8 @@
     </div>
   </div>
   <div class="setting-hint">从屏幕任意位置取色，应用于设置面板</div>
-  <div class="liquid_glass-wrapper" style="--border-radius: 12px">
-    <div class="liquid_glass-outer"></div><div class="liquid_glass-cover"></div>
-    <div class="liquid_glass-sharp"></div><div class="liquid_glass-reflect"></div>
-    <button class="btn-reset-settings" id="btnResetStats" style="position:relative;z-index:5">今日番茄归零</button>
-  </div>
-  <div class="liquid_glass-wrapper" style="--border-radius: 12px">
-    <div class="liquid_glass-outer"></div><div class="liquid_glass-cover"></div>
-    <div class="liquid_glass-sharp"></div><div class="liquid_glass-reflect"></div>
-    <button class="btn-reset-settings" id="btnResetSettings" style="position:relative;z-index:5">恢复默认设置</button>
-  </div>
+  <button class="btn-reset-settings" id="btnResetStats">今日番茄归零</button>
+  <button class="btn-reset-settings" id="btnResetSettings">恢复默认设置</button>
 </div></div></div>
 
 <!-- 完成提醒 -->
